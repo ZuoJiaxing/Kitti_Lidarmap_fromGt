@@ -1,0 +1,14 @@
+*.user
+*~
+**/build/*
+**/lib/*
+Vocabulary/*.txt
+*.kdev4
+**/KeyFrameTrajectory.txt
+**/KeyFrameNavStateTrajectory.txt
+*.autosave
+**/tmp/*
+**/debug.txt
+.tags*
+*.user
+

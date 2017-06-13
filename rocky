@@ -1,0 +1,19 @@
+此程序用来把kitti的激光点云根据groundtru拼接到第一帧矫正后的灰度左相机坐标系下。
+
+./constructLaserMap 05/velodyne/  05.txt
+
+运行程序前，要在可执行程序目录下创建generatePCD文件夹
+
+
+在存储激光点云时，为了和opencv中的坐标轴保持一致，我把点的y加了一个负号
+
+
+说明
+——————————————————————————————————————————————————————————————————————————————————
+constructLaserMap .cpp1 是我写的旧版本，试图根据groundtru把激光点云转化到rect_cam2的，但该文件中关于
+ Eigen::Matrix4d Tr_velo_to_cam2 = Tr_cam0_to_cam2 * Tr_velo_to_cam;
+ Eigen::Matrix4d Tr_velo_to_rect2 = R_rect2 * Tr_cam0_to_cam2 * Tr_velo_to_cam;
+都是对的，
+但是第121行左右的，是有问题的
+   tmpPose = poses[i] * Tr_velo_to_rect2; //TODO  这里的poses为 第一个矫正后的灰度左相机下的from ck to c0, 这里是有问题的,tmpPose (from velo to rectC2的 第一帧world)，应该是tmpPose = T_rectc0_to_rectc2 *poses[i]*inv(T_rectc0_to_rectc2) * Tr_velo_to_rect2;
+ readLaserData(laserfilename, Trans_framepoints, DISTHRE, tmpPose);//根据tmpPose (from velo to world)
