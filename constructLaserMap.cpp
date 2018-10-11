@@ -55,6 +55,8 @@ int main( int argc, char** argv )
     cout << prePathToLaserSequence << endl;
     cout << PathToGroundtru << endl;
     //标定的外参
+
+
     Eigen::Matrix4d Tr_velo_to_cam;
       Tr_velo_to_cam  << -1.857739385241e-03,  -9.999659513510e-01,  -8.039975204516e-03,  -4.784029760483e-03,
  -6.481465826011e-03, 8.051860151134e-03, -9.999466081774e-01, -7.337429464231e-02,
@@ -65,6 +67,11 @@ int main( int argc, char** argv )
 // -7.210626507497e-03, 8.081198471645e-03, -9.999413164504e-01, -5.403984729748e-02,
 // 9.999738645903e-01, 4.859485810390e-04, -7.206933692422e-03, -2.921968648686e-01,
 // 0,0,0,1;///从data_odometry_calib/01/calib.txt中读取的Tr( from velo to rectC0)//00-02sequence
+
+Tr_velo_to_cam  <<2.347736981471e-04, -9.999441545438e-01, -1.056347781105e-02, -2.796816941295e-03,
+ 1.044940741659e-02, 1.056535364138e-02, -9.998895741176e-01, -7.510879138296e-02,
+  9.999453885620e-01, 1.243653783865e-04, 1.045130299567e-02, -2.721327964059e-01,
+  0, 0, 0, 1;//从data_odometry_calib/03/calib.txt中读取的Tr( from velo to rectC0)//03sequence
 
     static Eigen::Matrix4d tmpPose;
     static string laserfilename;
