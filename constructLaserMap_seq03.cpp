@@ -30,7 +30,6 @@ using namespace std;
 using namespace pcl;
 
 #define DISTHRE 40.0
-#define RESULOTION 0.6
 
 int loadPoses(string file_name, vector<Eigen::Matrix4d> &poses) ;
 void readLaserData (string &filename, pcl::PointCloud<PointXYZI>::Ptr &points, double disThre);
@@ -56,15 +55,21 @@ int main( int argc, char** argv )
     cout << PathToGroundtru << endl;
     //标定的外参
     Eigen::Matrix4d Tr_velo_to_cam;
-      Tr_velo_to_cam  << -1.857739385241e-03,  -9.999659513510e-01,  -8.039975204516e-03,  -4.784029760483e-03,
- -6.481465826011e-03, 8.051860151134e-03, -9.999466081774e-01, -7.337429464231e-02,
- 9.999773098287e-01, -1.805528627661e-03, -6.496203536139e-03, -3.339968064433e-01,
- 0,0,0,1;///从data_odometry_calib/05/calib.txt中读取的Tr( from velo to rectC0) 04-12
+    
+ //      Tr_velo_to_cam  << -1.857739385241e-03,  -9.999659513510e-01,  -8.039975204516e-03,  -4.784029760483e-03,
+ // -6.481465826011e-03, 8.051860151134e-03, -9.999466081774e-01, -7.337429464231e-02,
+ // 9.999773098287e-01, -1.805528627661e-03, -6.496203536139e-03, -3.339968064433e-01,
+ // 0,0,0,1;///从data_odometry_calib/05/calib.txt中读取的Tr( from velo to rectC0) 04-12
 
 // Tr_velo_to_cam  <<4.276802385584e-04, -9.999672484946e-01, -8.084491683471e-03, -1.198459927713e-02,
 // -7.210626507497e-03, 8.081198471645e-03, -9.999413164504e-01, -5.403984729748e-02,
 // 9.999738645903e-01, 4.859485810390e-04, -7.206933692422e-03, -2.921968648686e-01,
 // 0,0,0,1;///从data_odometry_calib/01/calib.txt中读取的Tr( from velo to rectC0)//00-02sequence
+
+Tr_velo_to_cam  <<2.347736981471e-04, -9.999441545438e-01, -1.056347781105e-02, -2.796816941295e-03,
+ 1.044940741659e-02, 1.056535364138e-02, -9.998895741176e-01, -7.510879138296e-02,
+  9.999453885620e-01, 1.243653783865e-04, 1.045130299567e-02, -2.721327964059e-01,
+  0, 0, 0, 1;//从data_odometry_calib/03/calib.txt中读取的Tr( from velo to rectC0)//03sequence
 
     static Eigen::Matrix4d tmpPose;
     static string laserfilename;
@@ -94,9 +99,8 @@ int main( int argc, char** argv )
 
     int j = 0;
     int k = 0;
- for ( int i = 0; i < 80; i++ ) //ADJU    for ( int i = 0; i < poses.size(); i++ )
-    
-{
+    for ( int i = 0; i < poses.size(); i++ ) //ADJU    for ( int i = 0; i < poses.size(); i++ )
+    {
 
         cout << "转换laser数据中: " << i  << endl;
         stringstream ss;
@@ -116,7 +120,7 @@ int main( int argc, char** argv )
         // voxel filter
         pcl::VoxelGrid<PointXYZI> voxel_filter;
         //TODO  当分辨率设置低于0.01时会显示[pcl::VoxelGrid::applyFilter] Leaf size is too small for the input dataset. Integer indices would overflow.
-        voxel_filter.setLeafSize( RESULOTION,RESULOTION, RESULOTION );       // resolution
+        voxel_filter.setLeafSize( 0.3, 0.3, 0.3 );       // resolution
         //voxel_filter.setLeafSize( 0.05, 0.05, 0.05 );
         //voxel_filter.setLeafSize( 0.05, 0.05, 0.05 );       // resolution
         pcl::PointCloud<PointXYZI>::Ptr tmpPointCloud1 ( new pcl::PointCloud<PointXYZI> );
@@ -168,12 +172,12 @@ int main( int argc, char** argv )
 
 
     /// voxel filter
-     pcl::VoxelGrid<PointXYZI> voxel_filter;
-     voxel_filter.setLeafSize( RESULOTION, RESULOTION, RESULOTION );       // resolution
-     pcl::PointCloud<PointXYZI>::Ptr tmpPointCloud2 ( new pcl::PointCloud<PointXYZI> );
-     voxel_filter.setInputCloud( totalMappoints );
-    voxel_filter.filter( *tmpPointCloud2 );
-     tmpPointCloud2->swap( *totalMappoints );
+    // pcl::VoxelGrid<PointXYZI> voxel_filter;
+    // voxel_filter.setLeafSize( 0.01, 0.01, 0.01 );       // resolution
+    // pcl::PointCloud<PointXYZI>::Ptr tmpPointCloud2 ( new pcl::PointCloud<PointXYZI> );
+    // voxel_filter.setInputCloud( totalMappoints );
+    // voxel_filter.filter( *tmpPointCloud2 );
+    // tmpPointCloud2->swap( *totalMappoints );
     //    cout << "滤波之后，点云共有" << totalMappoints->size() << "个点." << endl;
 
     totalMappoints->is_dense = false;

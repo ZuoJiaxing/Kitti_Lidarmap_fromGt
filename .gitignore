@@ -11,4 +11,5 @@ Vocabulary/*.txt
 **/debug.txt
 .tags*
 *.user
-
+build/**
+data/**

@@ -1,11 +1,17 @@
+!!!!特别注意编译的是哪个cpp,其中的T_velo_cam对应kitti不同的序列.
+用法(多加了一个参数,保存的点云名称)
+./constructLaserMap 05/velodyne/  05.txt 05Totalmap.pcd
+_________________________________________________________________
 此程序用来把kitti的激光点云根据groundtru拼接到第一帧矫正后的灰度左相机坐标系下。
-
+!!!一定要注意外参Tr_velo_to_cam是不是对应相应的序列. 
 ./constructLaserMap 05/velodyne/  05.txt
-
+./constructLaserMap 04/velodyne/  04.txt
+./constructLaserMap 01/velodyne/  01.txt
+./constructLaserMap 06/velodyne/  06.txt
 运行程序前，要在可执行程序目录下创建generatePCD文件夹
 
 
-在存储激光点云时，为了和opencv中的坐标轴保持一致，我把点的y加了一个负号
+在存储激光点云时，为了和opencv中的坐标轴保持一致，我把点的y加了一个负号(应该修改为统一不加负号)
 
 
 说明

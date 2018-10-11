@@ -29,7 +29,7 @@
 using namespace std;
 using namespace pcl;
 
-#define DISTHRE 20.0
+#define DISTHRE 40.0
 
 int loadPoses(string file_name, vector<Eigen::Matrix4d> &poses) ;
 void readLaserData (string &filename, pcl::PointCloud<PointXYZI>::Ptr &points, double disThre);
@@ -38,10 +38,10 @@ void readLaserData(string &filename, pcl::PointCloud<PointXYZI>::Ptr &points, do
 int main( int argc, char** argv )
 {
 
-    if (argc != 3)
+    if (argc != 4)
     {
-        //example: ./project        05/velodyne/  05.txt
-        cerr << endl << "Usage: ./project    xx/velodyne/      xx.txt " << endl;
+        //example: ./project        05/velodyne/  05.txt  savepcd.pcd
+        cerr << endl << "Usage: ./project    xx/velodyne/      xx.txt  savepcd.pcd" << endl;
         // ros::shutdown();
         return 1;
     }
@@ -55,37 +55,18 @@ int main( int argc, char** argv )
     cout << PathToGroundtru << endl;
     //标定的外参
     Eigen::Matrix4d Tr_velo_to_cam;
-    // Tr_velo_to_cam << 4.276802385584e-04, -9.999672484946e-01, -8.084491683471e-03, -1.198459927713e-02,
-    //                -7.210626507497e-03, 8.081198471645e-03, -9.999413164504e-01, -5.403984729748e-02,
-    //                9.999738645903e-01, 4.859485810390e-04, -7.206933692422e-03, -2.921968648686e-01,
-    //                0, 0 , 0, 1;//
+ //      Tr_velo_to_cam  << -1.857739385241e-03,  -9.999659513510e-01,  -8.039975204516e-03,  -4.784029760483e-03,
+ // -6.481465826011e-03, 8.051860151134e-03, -9.999466081774e-01, -7.337429464231e-02,
+ // 9.999773098287e-01, -1.805528627661e-03, -6.496203536139e-03, -3.339968064433e-01,
+ // 0,0,0,1;///从data_odometry_calib/05/calib.txt中读取的Tr( from velo to rectC0) 04-12
 
-    Tr_velo_to_cam  << 7.027555e-03, -9.999753e-01, 2.599616e-05, -7.137748e-03,
-                    -2.254837e-03, -4.184312e-05, -9.999975e-01, -7.482656e-02,
-                    9.999728e-01, 7.027479e-03, -2.255075e-03, -3.336324e-01,
-                    0, 0, 0, 1; //指的是to camera0;//2011_09_30_calib raw中的，指的是到未矫正的左灰度相机 ,05 07序列
-
-    Eigen::Matrix4d Tr_cam0_to_cam2;
-    Tr_cam0_to_cam2  <<  9.999805e-01, -4.971067e-03, -3.793081e-03, 6.030222e-02,
-                     4.954076e-03, 9.999777e-01, -4.475856e-03, -1.293125e-03,
-                     3.815246e-03, 4.456977e-03, 9.999828e-01, 5.900421e-03,
-                     0, 0, 0, 1;
-
-    Eigen::Matrix4d R_rect2;
-    R_rect2  << 9.999019e-01, 1.307921e-02, -5.015634e-03, 0,
-             -1.307809e-02, 9.999144e-01, 2.561203e-04, 0,
-             5.018555e-03, -1.905003e-04, 9.999874e-01, 0,
-             0, 0, 0, 1;
-
-    Eigen::Matrix4d Tr_velo_to_cam2 = Tr_cam0_to_cam2 * Tr_velo_to_cam;
-    Eigen::Matrix4d Tr_velo_to_rect2 = R_rect2 * Tr_cam0_to_cam2 * Tr_velo_to_cam;
+Tr_velo_to_cam  <<4.276802385584e-04, -9.999672484946e-01, -8.084491683471e-03, -1.198459927713e-02,
+-7.210626507497e-03, 8.081198471645e-03, -9.999413164504e-01, -5.403984729748e-02,
+9.999738645903e-01, 4.859485810390e-04, -7.206933692422e-03, -2.921968648686e-01,
+0,0,0,1;///从data_odometry_calib/01/calib.txt中读取的Tr( from velo to rectC0)//00-02sequence
 
     static Eigen::Matrix4d tmpPose;
     static string laserfilename;
-
-
-
-
 
     //load  poses
     if (loadPoses(PathToGroundtru,  poses) == 0 )
@@ -112,7 +93,7 @@ int main( int argc, char** argv )
 
     int j = 0;
     int k = 0;
-    for ( int i = 0; i < 100; i++ ) //ADJU    for ( int i = 0; i < poses.size(); i++ )
+    for ( int i = 0; i < poses.size(); i++ ) //ADJU    for ( int i = 0; i < poses.size(); i++ )
     {
 
         cout << "转换laser数据中: " << i  << endl;
@@ -120,23 +101,41 @@ int main( int argc, char** argv )
         ss << setfill('0') << setw(6) << i;
         laserfilename = prePathToLaserSequence + ss.str() + ".bin";
         cout << laserfilename << endl;
-        tmpPose = poses[i] * Tr_velo_to_rect2; //TODO  这里的poses为 第一个矫正后的灰度左相机下的from ck to c0
-        
-
-
-
+        tmpPose = poses[i] * Tr_velo_to_cam; // 这里的poses为 第一个矫正后的灰度左相机下的from ck to c0
+       
         //pcl::PointCloud<PointXYZI>::Ptr  framepoints (new pcl::PointCloud<PointXYZI>);//单帧的激光点云
         pcl::PointCloud<PointXYZI>::Ptr  Trans_framepoints (new pcl::PointCloud<PointXYZI>);//转移到相机2坐标系（开始时刻）下的单帧的激光点云
 
         readLaserData(laserfilename, Trans_framepoints, DISTHRE, tmpPose);
         // pcl::io::savePCDFileBinary("Trans_framePointsmap.pcd", *Trans_framepoints );
         // depth filter and statistical removal
+
+        ///体素滤波
+        // voxel filter
+        pcl::VoxelGrid<PointXYZI> voxel_filter;
+        //TODO  当分辨率设置低于0.01时会显示[pcl::VoxelGrid::applyFilter] Leaf size is too small for the input dataset. Integer indices would overflow.
+        voxel_filter.setLeafSize( 0.3, 0.3, 0.3 );       // resolution
+        //voxel_filter.setLeafSize( 0.05, 0.05, 0.05 );
+        //voxel_filter.setLeafSize( 0.05, 0.05, 0.05 );       // resolution
+        pcl::PointCloud<PointXYZI>::Ptr tmpPointCloud1 ( new pcl::PointCloud<PointXYZI> );
+        voxel_filter.setInputCloud( Trans_framepoints );
+        voxel_filter.filter( *tmpPointCloud1 );
+        tmpPointCloud1->swap( *Trans_framepoints );
+
+
+        ///统计滤波
         pcl::PointCloud<PointXYZI>::Ptr tmpPointCloud ( new pcl::PointCloud<PointXYZI> );
         pcl::StatisticalOutlierRemoval<PointXYZI> statistical_filter;
         statistical_filter.setMeanK(50);
         statistical_filter.setStddevMulThresh(1.0);
         statistical_filter.setInputCloud(Trans_framepoints );
         statistical_filter.filter( *tmpPointCloud );
+
+
+        (*totalMappoints) += *tmpPointCloud;
+
+        ///每隔20帧保存一个pcd
+#if 0
         (*TmptotalMappoints) += *tmpPointCloud;
         j++;
         if (j == 20 )
@@ -162,13 +161,11 @@ int main( int argc, char** argv )
             j = 0;
             k++;
         }
-
+#endif
     }
 
-    //totalMappoints->is_dense = false;
-    //cout << "点云共有" << totalMappoints->size() << "个点." << endl;
 
-    // // voxel filter
+    /// voxel filter
     // pcl::VoxelGrid<PointXYZI> voxel_filter;
     // voxel_filter.setLeafSize( 0.01, 0.01, 0.01 );       // resolution
     // pcl::PointCloud<PointXYZI>::Ptr tmpPointCloud2 ( new pcl::PointCloud<PointXYZI> );
@@ -176,10 +173,14 @@ int main( int argc, char** argv )
     // voxel_filter.filter( *tmpPointCloud2 );
     // tmpPointCloud2->swap( *totalMappoints );
     //    cout << "滤波之后，点云共有" << totalMappoints->size() << "个点." << endl;
-    //
-    //cout << "Now save the PointCloud to .pcd file."
-    //     pcl::io::savePCDFileBinary("Totalmap.pcd", *totalMappoints );
+
+    totalMappoints->is_dense = false;
+    cout << "点云共有" << totalMappoints->size() << "个点." << endl;
+    cout << "Now save the PointCloud to .pcd file: "<<std::string(argv[3])<<endl;
+    pcl::io::savePCDFileBinary(std::string(argv[3]), *totalMappoints );
+    cout<<"---------------save done!----------------"<<endl;
     return 0;
+
 }
 
 
@@ -245,11 +246,15 @@ void readLaserData(string &filename, pcl::PointCloud<PointXYZI>::Ptr &points, do
         input.read((char *) &point.y, sizeof(float));
         input.read((char *) &point.z, sizeof(float));
         input.read((char *) &point.intensity, sizeof(float));
+	
         // 这里也可以过滤掉距离当前位置比较远的点和距离特别近的点
         double dis = sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
         if (dis > disThre | dis < 1.0)
             continue;
-        points->push_back(point);
+
+        ///NOTE 为了和opencv中的y轴方向保持一致
+    //point.y=-point.y;//NOTE
+    points->push_back(point);
     }
     input.close();
 }
@@ -274,7 +279,9 @@ void readLaserData(string &filename, pcl::PointCloud<PointXYZI>::Ptr &points, do
         input.read((char *) &point.y, sizeof(float));
         input.read((char *) &point.z, sizeof(float));
         input.read((char *) &point.intensity, sizeof(float));
-        // 这里也可以过滤掉距离当前位置比较远的点和距离特别近的点
+
+
+        // 这里也可以过滤掉距离当前位置(velo)比较远的点和距离特别近的点
         double dis = sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
         if (dis > disThre | dis < 1.0)
             continue;
@@ -284,7 +291,10 @@ void readLaserData(string &filename, pcl::PointCloud<PointXYZI>::Ptr &points, do
         point.x = ptTransPosition41(0, 0);
         point.y = ptTransPosition41(1, 0);
         point.z = ptTransPosition41(2, 0);
-        points->push_back(point);
+
+	//NOTE 为了和opencv中的y轴方向保持一致
+    //point.y=-point.y; //NOTE
+    points->push_back(point);
     }
     input.close();
 }
